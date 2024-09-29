@@ -1,9 +1,8 @@
 name: Validate RSA Key
 
 on:
-  push:
-    branches:
-      - main
+  repository_dispatch:
+    types: [validate-rsa-key]
 
 jobs:
   validate-key:
@@ -16,28 +15,31 @@ jobs:
       - name: Set Up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # Adjust to your Node.js version
+          node-version: '14'  # Adjust as needed
 
       - name: Install Dependencies
         run: |
-          npm install jsonwebtoken  # Install jsonwebtoken package to test the key
+          npm install jsonwebtoken
 
       - name: Retrieve RSA Private Key
         id: get_key
         run: |
           echo "${{ secrets.VAULT_RSA_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
+          echo "Private key retrieved successfully."
 
       - name: Validate RSA Key
         id: validate_key
         run: |
-          # Attempt to create a JWT token using the private key
+          echo "Validating RSA key..."
           NODE_ENV=test node -e "
           const fs = require('fs');
           const jwt = require('jsonwebtoken');
 
           try {
             const privateKey = fs.readFileSync('private_key.pem');
+            console.log('Private key loaded successfully.');
+
             const token = jwt.sign({ data: 'test' }, privateKey, { algorithm: 'RS256' });
             console.log('Token generated successfully:', token);
           } catch (err) {
@@ -48,4 +50,5 @@ jobs:
 
       - name: Clean up
         run: |
-          rm private_key.pem
+          echo "Cleaning up..."
+          rm -f private_key.pem
