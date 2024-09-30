@@ -17,9 +17,9 @@ jobs:
       
       - name: Write RSA Key to File
         env:
-          PRIVATE_KEY: ${{ secrets.SOME_SYNCED_RSA_KEY }}  # Use your synced secret name
+          PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Use your synced secret name
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           # Add your command that uses the private key here
-          # your-command --key private_key.pem
+           openssl rsa -in private_key.pem -check
