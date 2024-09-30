@@ -19,7 +19,7 @@ jobs:
         env:
           PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Use your synced secret name
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
+          echo "$VAULT_RSA_KEY" > private_key.pem
           chmod 600 private_key.pem
           # Add your command that uses the private key here
            openssl rsa -in private_key.pem -check
