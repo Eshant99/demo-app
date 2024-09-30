@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   deploy:
@@ -15,11 +16,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
       
+      - name: Debug Private Key Length
+        run: echo "${{ secrets.VAULT_RSA_KEY }}" | wc -c  # Check the character count
+      
       - name: Write RSA Key to File
         env:
           PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Use your synced secret name
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem  # Corrected to use PRIVATE_KEY
+          echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          # Add your command that uses the private key here
+          cat private_key.pem  # Debugging output, remove in production
           openssl rsa -in private_key.pem -check
