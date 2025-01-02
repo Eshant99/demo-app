@@ -44,8 +44,12 @@ jobs:
           echo "Running OpenSSL to validate the private key..."
           openssl rsa -in private_key.pem -check || echo "OpenSSL failed to read the private key. Please check the formatting."
 
-      # Optional Step: Display errors or logs for further insight
-      - name: Display Logs (If Needed)
+      # Optional Step: Capture the entire job output for troubleshooting (logs)
+      - name: Capture Job Logs for Debugging
         run: |
-          echo "Checking the error output in the workflow logs..."
-          tail -n 20 /tmp/github-actions-debug.log  # Display the last 20 lines of log (adjust if needed)
+          echo "Capturing full workflow logs for debugging purposes..."
+          echo "Workflow Logs:" >> workflow_logs.txt
+          cat /github/workspace/* >> workflow_logs.txt  # Capturing all logs and writing to a text file
+          
+          # Output the last 20 lines of the generated logs file
+          tail -n 20 workflow_logs.txt  # Display the last 20 lines of captured logs
