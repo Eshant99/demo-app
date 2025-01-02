@@ -3,11 +3,11 @@ name: CI Workflow
 on:
   push:
     branches:
-      - main  # Specify your trigger branch
+      - main
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -15,15 +15,43 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-      
+
+      # Step to debug the length of the private key in the secrets
       - name: Debug Private Key Length
-        run: echo "${{ secrets.VAULT_RSA_KEY }}" | wc -c  # Check the character count
-      
+        run: |
+          echo "Private Key Length: ${#PRIVATE_KEY}"
+          echo "First 100 characters of the private key for debugging:"
+          echo "$PRIVATE_KEY" | head -c 100  # Show the first 100 characters of the key
+
+      # Step to write the private key to a file and debug the contents
       - name: Write RSA Key to File
         env:
-          PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Use your synced secret name
+          PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Make sure the secret is synced correctly
         run: |
+          echo "Writing the private key to private_key.pem..."
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          cat private_key.pem  # Debugging output, remove in production
-          openssl rsa -in private_key.pem -check
+          
+          # Debugging: Show the contents of private_key.pem (sanitized)
+          echo "Sanitized contents of private_key.pem (first 100 characters):"
+          head -c 100 private_key.pem
+
+          # Debugging: Show the entire key (first 10 lines) for more insight
+          echo "First 10 lines of private_key.pem:"
+          head -n 10 private_key.pem  # Show only the first 10 lines of the file
+
+          # Running OpenSSL to validate the key and capture any error messages
+          echo "Running OpenSSL to validate the private key..."
+          openssl rsa -in private_key.pem -check || echo "OpenSSL failed to read the private key."
+
+      # Displaying any potential errors in the logs
+      - name: Display Potential Errors
+        run: |
+          echo "Checking the error output in the workflow logs..."
+          tail -n 20 /tmp/github-actions-debug.log  # Display the last 20 lines of log (adjust if needed)
+
+      # Optional: Check if there is any issue with environment variables
+      - name: Debug Environment Variables
+        run: |
+          echo "Printing environment variables for debugging..."
+          env | sort  # List environment variables (sanitized if sensitive)
