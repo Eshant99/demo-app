@@ -3,11 +3,11 @@ name: CI Workflow
 on:
   push:
     branches:
-      - main
+      - main  # Specify your trigger branch
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   deploy:
@@ -15,43 +15,37 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-
-      # Step to debug the length of the private key in the secrets
-      - name: Debug Private Key Length
+      
+      # Step 1: Debug the private key length and show first 100 characters
+      - name: Debug Private Key Length and Content
         run: |
-          echo "Private Key Length: ${#PRIVATE_KEY}"
-          echo "First 100 characters of the private key for debugging:"
-          echo "$PRIVATE_KEY" | head -c 100  # Show the first 100 characters of the key
+          echo "Private Key Length: ${#PRIVATE_KEY}"  # Print the length of the private key
+          echo "First 100 characters of private key:"
+          echo "$PRIVATE_KEY" | head -c 100  # Display the first 100 characters of the private key (sanitized)
 
-      # Step to write the private key to a file and debug the contents
+      # Step 2: Write RSA Key to a file and debug
       - name: Write RSA Key to File
         env:
-          PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Make sure the secret is synced correctly
+          PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Use your synced secret name
         run: |
           echo "Writing the private key to private_key.pem..."
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          
-          # Debugging: Show the contents of private_key.pem (sanitized)
+
+          # Debugging: Show sanitized contents of private_key.pem (first 100 characters)
           echo "Sanitized contents of private_key.pem (first 100 characters):"
-          head -c 100 private_key.pem
+          head -c 100 private_key.pem  # Show first 100 characters of the file
 
-          # Debugging: Show the entire key (first 10 lines) for more insight
+          # Debugging: Show the first 10 lines of the private key (in case of extra newlines or issues)
           echo "First 10 lines of private_key.pem:"
-          head -n 10 private_key.pem  # Show only the first 10 lines of the file
+          head -n 10 private_key.pem  # Show the first 10 lines
 
-          # Running OpenSSL to validate the key and capture any error messages
+          # Step 3: Run OpenSSL to validate the private key and capture any error messages
           echo "Running OpenSSL to validate the private key..."
-          openssl rsa -in private_key.pem -check || echo "OpenSSL failed to read the private key."
+          openssl rsa -in private_key.pem -check || echo "OpenSSL failed to read the private key. Please check the formatting."
 
-      # Displaying any potential errors in the logs
-      - name: Display Potential Errors
+      # Optional Step: Display errors or logs for further insight
+      - name: Display Logs (If Needed)
         run: |
           echo "Checking the error output in the workflow logs..."
           tail -n 20 /tmp/github-actions-debug.log  # Display the last 20 lines of log (adjust if needed)
-
-      # Optional: Check if there is any issue with environment variables
-      - name: Debug Environment Variables
-        run: |
-          echo "Printing environment variables for debugging..."
-          env | sort  # List environment variables (sanitized if sensitive)
