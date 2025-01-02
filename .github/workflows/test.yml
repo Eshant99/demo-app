@@ -24,7 +24,7 @@ jobs:
           echo "$PRIVATE_KEY" | head -c 100  # Display the first 100 characters of the private key (sanitized)
 
       # Step 2: Write RSA Key to a file and debug
-      - name: Write RSA Key to File
+      - name: Write RSA Key to File and Debug
         env:
           PRIVATE_KEY: ${{ secrets.VAULT_RSA_KEY }}  # Use your synced secret name
         run: |
@@ -44,12 +44,9 @@ jobs:
           echo "Running OpenSSL to validate the private key..."
           openssl rsa -in private_key.pem -check || echo "OpenSSL failed to read the private key. Please check the formatting."
 
-      # Optional Step: Capture the entire job output for troubleshooting (logs)
-      - name: Capture Job Logs for Debugging
+      # Optional Step: Print the job output and any potential error messages
+      - name: Print Workflow Logs for Debugging
         run: |
-          echo "Capturing full workflow logs for debugging purposes..."
-          echo "Workflow Logs:" >> workflow_logs.txt
-          cat /github/workspace/* >> workflow_logs.txt  # Capturing all logs and writing to a text file
-          
-          # Output the last 20 lines of the generated logs file
-          tail -n 20 workflow_logs.txt  # Display the last 20 lines of captured logs
+          echo "Printing the last 100 lines of the workflow log for debugging:"
+          tail -n 100 /tmp/_temp/workspace/runner*  # Print the last 100 lines of the runner logs
+
